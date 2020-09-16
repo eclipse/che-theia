@@ -10,7 +10,6 @@ FROM ${BUILD_ORGANIZATION}/${BUILD_PARENT_IMAGE}:${BUILD_TAG} as theia
 FROM cypress/browsers:node10.16.3-chrome80-ff73
 
 USER root
-ENV HOME=/root
 ENV NOCDN=true
 
 RUN apt-get update && \
@@ -19,12 +18,15 @@ CMD /root/docker-run.sh
 RUN yarn global add typescript@3.5.3 node-gyp && node-gyp install
 
 # Add cypress scripts and grab dependencies
-COPY src /root/
-RUN cd /root && yarn
+COPY src /projects/
+RUN cd /projects && yarn
 
 # Add tests
-ADD cypress /root/cypress/
+ADD cypress /projects/cypress/
 
 COPY --from=theia /home/theia /home/theia
 COPY --from=theia /entrypoint.sh /entrypoint.sh
 RUN find /home/theia/ -name "binding.gyp" |  xargs -i sh -c 'cd $(dirname {}) && node-gyp rebuild'
+
+USER theia
+CMD /projects/docker-run.sh

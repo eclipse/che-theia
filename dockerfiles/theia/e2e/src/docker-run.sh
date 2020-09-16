@@ -10,12 +10,12 @@
 : "${WAIT_COUNT:=30}"
 
 echo "Starting Theia..."
-rm -rf /root/logs/*
-HOME=/home/theia /entrypoint.sh > /root/logs/theia.log 2>/root/logs/theia-error.log&
+rm -rf /projects/logs/*
+HOME=/home/theia /entrypoint.sh > /projects/logs/theia.log 2>/projects/logs/theia-error.log&
 
 echo "Cleaning videos folder..."
 # Cleanup previous videos
-rm -rf /root/cypress/videos/*
+rm -rf /projects/cypress/videos/*
 
 # Find TCP 0.0.0.0:3100 that will be opened by Theia.
 sleep 5s
@@ -35,4 +35,4 @@ fi
 
 # Run tests
 echo "Run the tests"
-cd /root && unset LD_LIBRARY_PATH && /root/node_modules/.bin/cypress run -c trashAssetsBeforeRuns=false  --browser chrome
+cd /projects && unset LD_LIBRARY_PATH && /projects/node_modules/.bin/cypress run -c trashAssetsBeforeRuns=false  --browser chrome

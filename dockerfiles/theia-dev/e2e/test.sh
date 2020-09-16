@@ -9,7 +9,7 @@
 base_dir=$(cd "$(dirname "$0")"; pwd)
 . "${base_dir}/../../build.include"
 
-init --name:theia-e2e "$@"
+init --name:theia-builder-e2e "$@"
 
 DOCKER_RUN_OPTIONS=""
 # run bats with terminal mode (pretty print) if supported by current shell
@@ -19,18 +19,10 @@ fi
 
 # Runs E2E tests in a docker container.
 run_test_in_docker_container() {
-  mkdir -p ${base_dir}/$1
   docker_exec run --rm ${DOCKER_RUN_OPTIONS} \
-       --user $1 \
-       -v "${base_dir}/$1/videos":/projects/cypress/videos \
-       -v "${base_dir}/$1/logs":/projects/logs \
-       -v /var/run/docker.sock:/var/run/docker.sock \
-       -e CHE_API_INTERNAL=http://127.0.0.1/api \
-       -e CHE_MACHINE_TOKEN=foobar \
-       -e CHE_WORKSPACE_ID=workspaceId \
-       -e CHE_WORKSPACE_TELEMETRY_BACKEND_PORT=4167 \
+        --user $1 --group-add 0 \
            $IMAGE_NAME
 }
 
-run_test_in_docker_container '0:0'
-run_test_in_docker_container '1234:5678'
+run_test_in_docker_container 0:0
+run_test_in_docker_container 1234:5678

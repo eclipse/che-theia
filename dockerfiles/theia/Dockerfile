@@ -161,8 +161,8 @@ COPY --from=build-result /che-theia-build/plugins /default-theia-plugins
            sudo chgrp -R 0 ${f} && \
            sudo chmod -R g+rwX ${f}; \
        done \
-    && cat /etc/passwd | sed s#root:x.*#root:x:\${USER_ID}:\${GROUP_ID}::\${HOME}:/bin/bash#g > ${HOME}/passwd.template \
-    && cat /etc/group | sed s#root:x:0:#root:x:0:0,\${USER_ID}:#g > ${HOME}/group.template \
+    && cat /etc/passwd | sed s#root:x.*#root:x:\${USER_ID}:\${GROUP_ID}::\${HOME}:/bin/bash#g > /.passwd.template \
+    && cat /etc/group | sed s#root:x:0:#root:x:0:0,\${USER_ID}:#g > /.group.template \
     # Add yeoman, theia plugin & VS Code generator and typescript (to have tsc/typescript working)
     && yarn global add ${YARN_FLAGS} yo @theia/generator-plugin@0.0.1-1562578105 generator-code typescript@3.5.3 \
     && mkdir -p ${HOME}/.config/insight-nodejs/ \
@@ -179,9 +179,13 @@ COPY --from=build-result /che-theia-build/plugins /default-theia-plugins
     && yarn cache clean \
     #ENDIF
     # Change permissions to allow editing of files for openshift user
-    && find ${HOME} -exec sh -c "chgrp 0 {}; chmod g+rwX {}" \;
+    && for f in "${HOME}" /etc/passwd /etc/group /node_modules /default-theia-plugins /projects; do\
+           sudo chgrp -R 0 ${f} && \
+           sudo chmod -R g+rwX ${f}; \
+       done
 
-COPY --chown=theia:root --from=build-result /che-theia-build /home/theia
+COPY --chown=theia:root --from=builder /home/theia-dev/theia-source-code/production /home/theia
+
 USER theia
 WORKDIR /projects
 COPY src/entrypoint.sh /entrypoint.sh

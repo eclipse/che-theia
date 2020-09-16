@@ -18,20 +18,28 @@ if ! grep -Fq "${USER_ID}" /etc/passwd; then
     # current user is an arbitrary
     # user (its uid is not in the
     # container /etc/passwd). Let's fix that
-    cat ${HOME}/passwd.template | \
-    sed "s/\${USER_ID}/${USER_ID}/g" | \
-    sed "s/\${GROUP_ID}/${GROUP_ID}/g" | \
-    sed "s/\${HOME}/\/home\/theia/g" > /etc/passwd
+    sed \
+	-e "s/\${USER_ID}/${USER_ID}/g" \
+        -e "s/\${GROUP_ID}/${GROUP_ID}/g" \
+        -e "s/\${HOME}/\/home\/theia/g" \
+        /.passwd.template > /etc/passwd
+    sed \
+        -e "s/\${GROUP_ID}/${GROUP_ID}/g" \
+        /.group.template > /etc/group
 
-    cat ${HOME}/group.template | \
-    sed "s/\${USER_ID}/${USER_ID}/g" | \
-    sed "s/\${GROUP_ID}/${GROUP_ID}/g" | \
-    sed "s/\${HOME}/\/home\/theia/g" > /etc/group
+    # now the user `theia` (that have uid:gid == $USER_ID,$GROUPID) can use `sudo`.
 fi
 
+# Disable the statistics for yeoman
+mkdir -p ${HOME}/.config/insight-nodejs/
+echo '{"optOut": true}' > ${HOME}/.config/insight-nodejs/insight-yo.json
+
 # Grant access to projects volume in case of non root user with sudo rights
-if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && sudo -n true > /dev/null 2>&1; then
-    sudo chown ${USER_ID}:${GROUP_ID} /projects
+if [ "$USER_ID" -ne 0 ] && command -v sudo >/dev/null 2>&1 && sudo -n true > /dev/null 2>&1; then
+    sudo chmod 644 /etc/passwd /etc/group
+    sudo chown root:root /etc/passwd /etc/group
+
+    sudo chown ${USER_ID}:${GROUP_ID} /projects "${HOME}"
 fi
 
 if [ -z "$THEIA_PORT" ]; then
