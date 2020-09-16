@@ -41,6 +41,7 @@ import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
 import { EnvVariablesServerImpl } from '@theia/core/lib/node/env-variables';
 import { PluginRemoteNodeImpl } from './plugin-remote-node-impl';
 import { MAIN_REMOTE_RPC_CONTEXT } from '../common/plugin-remote-rpc';
+import { InternalMessagePayload, InternalMessage } from './internal-messages';
 
 interface CheckAliveWS extends ws {
     alive: boolean;
@@ -50,7 +51,6 @@ function modifyPathToLocal(origPath: string): string {
     return path.join(os.homedir(), origPath.substr(0, '/home/theia/'.length));
 }
 
-@injectable()
 export class PluginRemoteInit {
 
     // check alive
@@ -78,6 +78,8 @@ export class PluginRemoteInit {
 
     private pluginReaderExtension: PluginReaderExtension;
     private remoteTraceLogger: RemoteHostTraceLogger;
+
+    private pluginDeployerHandler: PluginDeployerHandlerImpl;
 
     constructor(private pluginPort: number) {
 
@@ -115,6 +117,8 @@ export class PluginRemoteInit {
         inversifyContainer.load(pluginRemoteBackendModule);
 
         inversifyContainer.bind<number>('plugin.port').toConstantValue(this.pluginPort);
+
+        this.pluginDeployerHandler = inversifyContainer.get(PluginDeployerHandlerImpl);
 
         // start the deployer
         const pluginDeployer = inversifyContainer.get<PluginDeployer>(PluginDeployer);
@@ -203,12 +207,12 @@ to pick-up automatically a free port`));
     // create a new client on top of socket
     newClient(id: number, socket: ws): WebSocketClient {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const emitter = new Emitter<any>();
+        const emitter = new Emitter<string>();
         const webSocketClient = new WebSocketClient(id, socket, emitter);
         webSocketClient.rpc = new RPCProtocolImpl({
             onMessage: emitter.event,
             // send messages to this client
-            send: (m: {}) => {
+            send: (m: string) => {
                 webSocketClient.send(m);
             }
         });
@@ -270,9 +274,9 @@ to pick-up automatically a free port`));
 
             // handle local call
             if (jsonParsed.internal) {
-
+                const payload: InternalMessagePayload = jsonParsed.internal;
                 // asked to stop plug-ins
-                if (jsonParsed.internal.method && jsonParsed.internal.method === 'stop') {
+                if (payload.method === 'stop') {
                     try {
                         // wait to stop plug-ins
                         // FIXME: we need to fix this
@@ -288,9 +292,9 @@ to pick-up automatically a free port`));
                 }
 
                 // asked to send plugin resource
-                if (jsonParsed.internal.method === 'getResource') {
-                    const pluginId: string = jsonParsed.internal['pluginId'];
-                    const resourcePath: string = jsonParsed.internal['path'];
+                if (payload.method === 'getResourceRequest') {
+                    const pluginId: string = jsonParsed.internal.pluginId;
+                    const resourcePath: string = jsonParsed.internal.path;
 
                     const pluginRootDirectory = this.pluginReaderExtension.getPluginRootDirectory(pluginId);
                     const resourceFilePath = path.join(pluginRootDirectory!, resourcePath);
@@ -301,37 +305,36 @@ to pick-up automatically a free port`));
                         resourceBase64 = resourceBinary.toString('base64');
                     }
 
-                    client.send({
-                        'internal': {
-                            'method': 'getResource',
-                            'pluginId': pluginId,
-                            'path': resourcePath,
-                            'data': resourceBase64
+                    const reply: InternalMessage = {
+                        internal: {
+                            method: 'getResourceReply',
+                            pluginId: pluginId,
+                            path: resourcePath,
+                            data: resourceBase64
                         }
-                    });
+                    };
+
+                    client.send(JSON.stringify(reply));
 
                     return;
                 }
 
                 // asked to grab metadata, send them
-                if (jsonParsed.internal.metadata && 'request' === jsonParsed.internal.metadata) {
-                    // apply host on all local metadata
-                    currentBackendDeployedPlugins.forEach(deployedPlugin => deployedPlugin.metadata.host = jsonParsed.internal.endpointName);
-                    const metadataResult = {
-                        'internal': {
-                            'endpointName': jsonParsed.internal.endpointName,
-                            'metadata': {
-                                'result': currentBackendDeployedPlugins
-                            }
+                if (payload.method === 'metadataRequest') {
+                    const plugins = await this.pluginDeployerHandler.getDeployedBackendPlugins();
+                    const reply: InternalMessage = {
+                        internal: {
+                            method: 'metadataReply',
+                            result: plugins
                         }
                     };
-                    client.send(metadataResult);
+                    client.send(JSON.stringify(reply));
                 }
                 return;
             }
 
             // send what is inside the message (wrapped message)
-            client.fire(jsonParsed);
+            client.fire(data.toString());
 
         });
     }
@@ -346,8 +349,7 @@ export class WebSocketClient {
 
     public pluginHostRPC: PluginHostRPC;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(private readonly id: number, private socket: ws, private readonly emitter: Emitter<any>) {
+    constructor(private readonly id: number, private socket: ws, private readonly emitter: Emitter<string>) {
     }
 
     public getIdentifier(): number {
@@ -356,9 +358,9 @@ export class WebSocketClient {
 
     // message is a JSON entry
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    send(message: any): void {
+    send(message: string): void {
         try {
-            this.socket.send(JSON.stringify(message));
+            this.socket.send(message);
         } catch (error) {
             console.log('error socket while sending', error, message);
         }
@@ -369,7 +371,7 @@ export class WebSocketClient {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fire(message: any): void {
+    fire(message: string): void {
         try {
             this.emitter.fire(message);
         } catch (error) {
@@ -378,8 +380,6 @@ export class WebSocketClient {
     }
 
 }
-
-const currentBackendDeployedPlugins: DeployedPlugin[] = [];
 
 @injectable()
 class PluginDeployerHandlerImpl implements PluginDeployerHandler {
@@ -407,6 +407,11 @@ class PluginDeployerHandlerImpl implements PluginDeployerHandler {
 
     async getDeployedFrontendPluginIds(): Promise<string[]> {
         return [];
+    }
+
+    async getDeployedBackendPlugins(): Promise<DeployedPlugin[]> {
+        await this.backendPluginsMetadataDeferred.promise;
+        return Array.from(this.deployedBackendPlugins.values());
     }
 
     async getDeployedBackendPluginIds(): Promise<string[]> {
@@ -485,7 +490,6 @@ class PluginDeployerHandlerImpl implements PluginDeployerHandler {
             const deployed: DeployedPlugin = { metadata, type };
             deployed.contributes = this.reader.readContribution(manifest);
             this.deployedBackendPlugins.set(metadata.model.id, deployed);
-            currentBackendDeployedPlugins.push(deployed);
             this.logger.info(`Deploying ${entryPoint} plugin "${metadata.model.name}@${metadata.model.version}" from "${metadata.model.entryPoint[entryPoint] || pluginPath}"`);
         } catch (e) {
             console.error(`Failed to deploy ${entryPoint} plugin from '${pluginPath}' path`, e);

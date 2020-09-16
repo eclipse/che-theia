@@ -26,7 +26,7 @@ export class HostedPluginMapping {
     // list of endpoints
     private endpoints: string[];
 
-    // mapping between plugin's id and the websocket endpoint
+    // mapping between plugin host id and the websocket endpoint
     private pluginsEndpoints = new Map<string, string>();
 
     /**
@@ -50,18 +50,22 @@ export class HostedPluginMapping {
     }
 
     /**
-     * Checks if the given pluginID has a remote endpoint
+     * Checks if the given pluginHostId has a remote endpoint
      */
-    hasEndpoint(pluginID: string): boolean {
-        return this.pluginsEndpoints.has(pluginID);
+    hasEndpoint(pluginHostId: string): boolean {
+        return this.pluginsEndpoints.has(pluginHostId);
+    }
+
+    setEndpoint(pluginHostId: string, websocketEndpoint: string): void {
+        this.pluginsEndpoints.set(pluginHostId, websocketEndpoint);
     }
 
     /**
      * Gets endpoint for given id
-     * @param pluginID for plugin-id
+     * @param pluginHostId for plugin host id
      */
-    getEndpoint(pluginID: string): string | undefined {
-        return this.pluginsEndpoints.get(pluginID);
+    getEndpoint(pluginHostId: string): string | undefined {
+        return this.pluginsEndpoints.get(pluginHostId);
     }
 
     /**
@@ -70,12 +74,4 @@ export class HostedPluginMapping {
     getEndPoints(): string[] {
         return this.endpoints;
     }
-
-    /**
-     * Gets the pluging endpoints
-     */
-    getPluginsEndPoints(): Map<string, string> {
-        return this.pluginsEndpoints;
-    }
-
 }

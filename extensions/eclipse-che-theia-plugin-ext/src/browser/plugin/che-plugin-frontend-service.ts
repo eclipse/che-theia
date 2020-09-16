@@ -15,15 +15,15 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { HostedPluginServer, PluginMetadata, DeployedPlugin } from '@theia/plugin-ext/lib/common/plugin-protocol';
+import { PluginMetadata } from '@theia/plugin-ext/lib/common/plugin-protocol';
 import { ChePluginMetadata } from '../../common/che-plugin-protocol';
 import { PluginFilter } from '../../common/plugin/plugin-filter';
+import { HostedPluginSupport } from '@theia/plugin-ext/lib/hosted/browser/hosted-plugin';
 
 @injectable()
 export class ChePluginFrontentService {
-
-    @inject(HostedPluginServer)
-    protected readonly hostedPluginServer: HostedPluginServer;
+    @inject(HostedPluginSupport)
+    protected hostedPluginSupport: HostedPluginSupport;
 
     // returns a list of built-in plugins when filter contains '@builtin'
     async getBuiltInPlugins(filter: string): Promise<ChePluginMetadata[]> {
@@ -36,19 +36,18 @@ export class ChePluginFrontentService {
      * Returns non-filtered list of the deployed plugins.
      */
     private async getAllDeployedPlugins(): Promise<ChePluginMetadata[]> {
-        const pluginIds = await this.hostedPluginServer.getDeployedPluginIds();
-        const metadata = await this.hostedPluginServer.getDeployedPlugins({ pluginIds });
+        const allMetadata = this.hostedPluginSupport.plugins;
 
-        const plugins: ChePluginMetadata[] = metadata.map((meta: DeployedPlugin) => {
-            const publisher = meta.metadata.model.publisher;
-            const name = meta.metadata.model.name;
-            const version = meta.metadata.model.version;
-            const type = this.determinePluginType(meta.metadata);
-            const displayName = meta.metadata.model.displayName ? meta.metadata.model.displayName : meta.metadata.model.name;
+        const plugins: ChePluginMetadata[] = allMetadata.map((meta: PluginMetadata) => {
+            const publisher = meta.model.publisher;
+            const name = meta.model.name;
+            const version = meta.model.version;
+            const type = this.determinePluginType(meta);
+            const displayName = meta.model.displayName ? meta.model.displayName : meta.model.name;
 
             const title = name;
 
-            const description = meta.metadata.model.description;
+            const description = meta.model.description;
 
             // Temporary disabled.
             // We don't have an ability for now to display icons from the file system.

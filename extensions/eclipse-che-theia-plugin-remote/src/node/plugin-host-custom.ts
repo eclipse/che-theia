@@ -73,19 +73,19 @@ process.on('rejectionHandled', (promise: Promise<any>) => {
     }
 });
 
-const emitter = new Emitter();
+const emitter = new Emitter<string>();
 const rpc = new RPCProtocolImpl({
     onMessage: emitter.event,
-    send: (m: {}) => {
+    send: (m: string) => {
         if (process.send) {
-            process.send(JSON.stringify(m));
+            process.send(m);
         }
     }
 });
 
 process.on('message', (message: string) => {
     try {
-        emitter.fire(JSON.parse(message));
+        emitter.fire(message);
     } catch (e) {
         console.error(e);
     }

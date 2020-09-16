@@ -82,10 +82,10 @@ export class PreferencesProvider implements FrontendApplicationContribution {
             throw new Error('Failed to get Theia workspace.');
         }
         for (const [key, value] of props) {
-            if (this.preferenceService.has(key, workspace.uri)) {
+            if (this.preferenceService.has(key, workspace.resource.toString())) {
                 continue;
             }
-            await this.preferenceService.set(key, value, PreferenceScope.Workspace, workspace.uri);
+            await this.preferenceService.set(key, value, PreferenceScope.Workspace, workspace.resource.toString());
         }
     }
 

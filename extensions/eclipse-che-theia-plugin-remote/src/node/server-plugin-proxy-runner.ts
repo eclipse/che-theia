@@ -22,12 +22,6 @@ export class ServerPluginProxyRunner implements ServerPluginRunner {
     @inject(HostedPluginRemote)
     protected readonly hostedPluginRemote: HostedPluginRemote;
 
-    private defaultRunner: ServerPluginRunner;
-
-    public setDefault(defaultRunner: ServerPluginRunner): void {
-        this.defaultRunner = defaultRunner;
-    }
-
     public setClient(client: HostedPluginClient): void {
         this.hostedPluginRemote.setClient(client);
     }
@@ -37,33 +31,27 @@ export class ServerPluginProxyRunner implements ServerPluginRunner {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public acceptMessage(jsonMessage: any): boolean {
-        return jsonMessage.pluginID !== undefined;
+    acceptMessage(pluginHostId: string): boolean {
+        return this.hostedPluginRemote.hasEndpoint(pluginHostId);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(jsonMessage: any): void {
-        // do routing on the message
-        if (this.hostedPluginRemote.hasEndpoint(jsonMessage.pluginID)) {
-            this.hostedPluginRemote.onMessage(jsonMessage);
-        } else {
-            this.defaultRunner.onMessage(jsonMessage.content);
-        }
-
+    public onMessage(pluginHostId: string, jsonMessage: string): void {
+        this.hostedPluginRemote.onMessage(pluginHostId, jsonMessage);
     }
 
     /**
      * Provides additional deployed plugins.
      */
-    public getExtraDeployedPlugins(): Promise<DeployedPlugin[]> {
-        return this.hostedPluginRemote.getExtraDeployedPlugins();
+    public getDeployedPlugins(pluginHostId: string, pluginIds: string[]): Promise<DeployedPlugin[]> {
+        return Promise.resolve(this.hostedPluginRemote.getDeployedPlugins(pluginHostId, pluginIds));
     }
 
     /**
      * Provides additional plugin ids.
      */
-    public getExtraDeployedPluginIds(): Promise<string[]> {
-        return this.hostedPluginRemote.getExtraDeployedPluginIds();
+    public getDeployedPluginIds(pluginHostId: string): Promise<string[]> {
+        return Promise.resolve(this.hostedPluginRemote.getDeployedPluginIds(pluginHostId));
     }
 
 }

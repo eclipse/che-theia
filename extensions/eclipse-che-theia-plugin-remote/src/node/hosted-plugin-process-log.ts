@@ -9,36 +9,20 @@
  **********************************************************************/
 
 import { HostedPluginProcess } from '@theia/plugin-ext/lib/hosted/node/hosted-plugin-process';
-import * as cp from 'child_process';
 import { LogType } from '@theia/plugin-ext/lib/common/types';
-import { HostedPluginClient } from '@theia/plugin-ext/lib/common/plugin-protocol';
 
 /**
  * Redirect extension host log to client
  */
 export class LogHostedPluginProcess extends HostedPluginProcess {
 
-    constructor() {
-        super();
+    protected onStdOutData(serverName: string, pid: number, data: string | Buffer): void {
+        super.onStdOutData(serverName, pid, data);
+        this.client.log({ data: `Extension-Host:${data.toString().trim()}`, type: LogType.Info });
     }
 
-    public runPluginServer(): void {
-        super.runPluginServer();
-
-        // grab childProcess and client
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const childProcess: cp.ChildProcess = (this as any).childProcess;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const client: HostedPluginClient = (this as any).client;
-
-        if (childProcess) {
-            if (childProcess.stdout) {
-                childProcess.stdout.on('data', data => client.log({ data: `Extension-Host:${data.toString().trim()}`, type: LogType.Info }));
-            }
-            if (childProcess.stderr) {
-                childProcess.stderr.on('data', data => client.log({ data: `Extension-Host:${data.toString().trim()}`, type: LogType.Error }));
-            }
-        }
+    protected onStdErrData(serverName: string, pid: number, data: string | Buffer): void {
+        super.onStdErrData(serverName, pid, data);
+        this.client.log({ data: `Extension-Host:${data.toString().trim()}`, type: LogType.Error });
     }
-
 }
