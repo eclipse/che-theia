@@ -8,17 +8,20 @@
  * SPDX-License-Identifier: EPL-2.0
  ***********************************************************************/
 
-import { CHE_PLUGIN_SERVICE_PATH, ChePluginService, ChePluginServiceClient } from '../common/che-plugin-protocol';
 import {
+  CHE_AUTHORITY_SERVICE_PATH,
   CHE_PRODUCT_SERVICE_PATH,
   CHE_TASK_SERVICE_PATH,
+  CheAuthorityService,
   CheProductService,
   CheTaskClient,
   CheTaskService,
 } from '../common/che-protocol';
+import { CHE_PLUGIN_SERVICE_PATH, ChePluginService, ChePluginServiceClient } from '../common/che-plugin-protocol';
 import { ConnectionHandler, JsonRpcConnectionHandler } from '@theia/core';
 
 import { BackendApplicationContribution } from '@theia/core/lib/node/backend-application';
+import { CheAuthorityServiceImpl } from './che-authority-service';
 import { CheClientIpServiceContribution } from './che-client-ip-service';
 import { CheEnvVariablesServerImpl } from './che-env-variables-server';
 import { ChePluginApiContribution } from './che-plugin-script-service';
@@ -73,6 +76,13 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
           client.onDidCloseConnection(() => server.disconnectClient(client));
           return server;
         })
+    )
+    .inSingletonScope();
+
+  bind(CheAuthorityService).to(CheAuthorityServiceImpl).inSingletonScope();
+  bind(ConnectionHandler)
+    .toDynamicValue(
+      ctx => new JsonRpcConnectionHandler(CHE_AUTHORITY_SERVICE_PATH, () => ctx.container.get(CheAuthorityService))
     )
     .inSingletonScope();
 

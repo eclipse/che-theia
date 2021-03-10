@@ -259,6 +259,16 @@ declare module '@eclipse-che/plugin' {
 
         export function deleteKey(service: string, name: string): Promise<void>;
     }
+
+    export namespace authority {
+        /**
+         * Returns an array containing available certificates.
+         * 
+         * Includes `/tmp/che/secret/ca.crt` and all certificates from `/public-certs`.
+         */
+        export function getCertificates(): Promise<Buffer[] | undefined>;
+    }
+
     /**
      * Optionla parameters for telemetry events
      */

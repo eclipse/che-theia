@@ -8,6 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  ***********************************************************************/
 
+import * as che from '@eclipse-che/plugin';
 import * as fileuri from './file-uri';
 import * as fs from 'fs-extra';
 import * as git from './git';
@@ -16,7 +17,6 @@ import * as path from 'path';
 import * as ssh from './ssh';
 import * as theia from '@theia/plugin';
 
-import { TaskScope } from '@eclipse-che/plugin';
 import { che as cheApi } from '@eclipse-che/api';
 import { execute } from './exec';
 import { getCertificate } from './ca-cert';
@@ -387,15 +387,17 @@ export class TheiaCommand {
 
     if (this.id === ActionId.RUN_COMMAND) {
       if (this.properties) {
-        return theia.commands.executeCommand('task:run', CHE_TASK_TYPE, this.properties.name, TaskScope.Global).then(
-          () => {
-            theia.window.showInformationMessage('Executed che command succesfully');
-          },
-          e => {
-            theia.window.showErrorMessage(`Could not execute Che command: ${e.message}`);
-            console.log('Could not execute Che command', e);
-          }
-        );
+        return theia.commands
+          .executeCommand('task:run', CHE_TASK_TYPE, this.properties.name, che.TaskScope.Global)
+          .then(
+            () => {
+              theia.window.showInformationMessage('Executed che command succesfully');
+            },
+            e => {
+              theia.window.showErrorMessage(`Could not execute Che command: ${e.message}`);
+              console.log('Could not execute Che command', e);
+            }
+          );
       }
     }
 

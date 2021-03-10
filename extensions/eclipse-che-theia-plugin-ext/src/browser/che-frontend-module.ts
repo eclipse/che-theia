@@ -11,15 +11,17 @@
 import '../../src/browser/style/che-plugins.css';
 import '../../src/browser/style/tasks.css';
 
-import { CHE_PLUGIN_SERVICE_PATH, ChePluginService, ChePluginServiceClient } from '../common/che-plugin-protocol';
 import {
+  CHE_AUTHORITY_SERVICE_PATH,
   CHE_PRODUCT_SERVICE_PATH,
   CHE_TASK_SERVICE_PATH,
+  CheAuthorityService,
   CheProductService,
   CheSideCarContentReaderRegistry,
   CheTaskClient,
   CheTaskService,
 } from '../common/che-protocol';
+import { CHE_PLUGIN_SERVICE_PATH, ChePluginService, ChePluginServiceClient } from '../common/che-plugin-protocol';
 import { CheSideCarContentReaderRegistryImpl, CheSideCarResourceResolver } from './che-sidecar-resource';
 import { CommandContribution, ResourceResolver } from '@theia/core/lib/common';
 import { ContainerModule, interfaces } from 'inversify';
@@ -95,6 +97,13 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
   bind(ChePluginCommandContribution).toSelf().inSingletonScope();
   bind(CommandContribution).toService(ChePluginCommandContribution);
+
+  bind(CheAuthorityService)
+    .toDynamicValue(ctx => {
+      const provider = ctx.container.get(WebSocketConnectionProvider);
+      return provider.createProxy<CheAuthorityService>(CHE_AUTHORITY_SERVICE_PATH);
+    })
+    .inSingletonScope();
 
   bind(CheProductService)
     .toDynamicValue(ctx => {
