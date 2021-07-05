@@ -47,7 +47,7 @@ jobs:
         id: run-minikube
         uses: che-incubator/setup-minikube-action@next
         with:
-          minikube-version: v1.20.0
+          minikube-version: v1.21.0
       - name: Deploy Eclipse Che
         id: deploy-che
         uses: che-incubator/che-deploy-action@next
