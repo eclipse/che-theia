@@ -17,6 +17,7 @@ THEIA_BRANCH="master"
 THEIA_COMMIT_SHA="9648953cd6e8552b7e027558509ba77770bd8b6f"
 THEIA_GIT_REFS="refs\\/heads\\/master"
 THEIA_DOCKER_IMAGE_VERSION=
+ARCH=
 
 prepare_yarn_root_args() {
     IFS=',' read -r -a YARN_ARGS_ARRAY <<< "$@"
@@ -40,6 +41,10 @@ parse() {
       --root-yarn-opts*:*)
         ROOT_YARN_CSV="${1#*:}"
         prepare_yarn_root_args $ROOT_YARN_CSV
+        shift ;;
+      --arch:*)
+        ARCH="${1#*:}"
+        IMAGE_TAG=$IMAGE_TAG-$TRAVIS_TAG-$ARCH
         shift ;;
       *)
         FILTERED_ARGS="${FILTERED_ARGS} $1"
@@ -104,11 +109,20 @@ publishImages() {
     docker tag "${image}:${IMAGE_TAG}" "${REGISTRY}/${image}:${IMAGE_TAG}"
     echo y | docker push "${REGISTRY}/${image}:${IMAGE_TAG}"
     if [[ -n "${THEIA_DOCKER_IMAGE_VERSION}" ]]; then
-      echo "Publishing ${image}:${THEIA_DOCKER_IMAGE_VERSION}..."
-      docker tag "${image}:${IMAGE_TAG}" "${REGISTRY}/${image}:${THEIA_DOCKER_IMAGE_VERSION}"
-      echo y | docker push "${REGISTRY}/${image}:${THEIA_DOCKER_IMAGE_VERSION}"
+      if [[ -n "${ARCH}" ]]; then
+         echo "Publishing ${image}:${THEIA_DOCKER_IMAGE_VERSION}-${TRAVIS_TAG}-${ARCH}..."
+         docker tag "${image}:${IMAGE_TAG}" "${REGISTRY}/${image}:${THEIA_DOCKER_IMAGE_VERSION}-${TRAVIS_TAG}-${ARCH}"
+         echo y | docker push "${REGISTRY}/${image}:${THEIA_DOCKER_IMAGE_VERSION}-${TRAVIS_TAG}-${ARCH}"
+      else
+         echo "Publishing ${image}:${THEIA_DOCKER_IMAGE_VERSION}..."
+         docker tag "${image}:${IMAGE_TAG}" "${REGISTRY}/${image}:${THEIA_DOCKER_IMAGE_VERSION}"
+         echo y | docker push "${REGISTRY}/${image}:${THEIA_DOCKER_IMAGE_VERSION}"
+      fi
     else
       SHORT_SHA=$(git rev-parse --short HEAD)
+      if [[ -n "${ARCH}" ]]; then
+         SHORT_SHA=$SHORT_SHA-$TRAVIS_TAG-$ARCH
+      fi
       echo "Publishing ${image}:${SHORT_SHA}..."
       docker tag "${image}:${IMAGE_TAG}" "${REGISTRY}/${image}:${SHORT_SHA}"
       echo y | docker push "${REGISTRY}/${image}:${SHORT_SHA}"

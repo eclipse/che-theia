@@ -38,3 +38,29 @@ jobs:
         docker pull quay.io/eclipse/che-theia-dev:next
         docker tag quay.io/eclipse/che-theia-dev:next eclipse/che-theia-dev:next
         ./build.sh --root-yarn-opts:--ignore-scripts --dockerfile:Dockerfile.alpine --build-args:THEIA_GITHUB_REPO=${{ github.event.inputs.theia_github_repo }} --branch:${{ github.event.inputs.theia_branch }}
+
+  travis-build:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - name: Trigger build on Travis CI
+      run: |
+        body="{
+        \"request\":{
+        \"config\": {
+          \"env\": {
+            \"global\": [
+              \"THEIA_GITHUB_REPO=${{ github.event.inputs.theia_github_repo }}\",
+              \"THEIA_BRANCH=${{ github.event.inputs.theia_branch }}\"
+             ]
+           }
+        } 
+        }}"
+
+        curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
+        -H "Travis-API-Version: 3" \
+        -H "Authorization: token ${{ secrets.TRAVIS_TOKEN }}" \
+        -d "$body" \
+        https://api.travis-ci.com/repo/eclipse-che%2Fche-theia/requests

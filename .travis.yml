@@ -1,0 +1,173 @@
+# Che-Theia workflow
+
+dist: focal
+os: linux
+cache: false
+git:
+  depth: false 
+
+language: node_js
+node_js: "12"
+
+install:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker login quay.io -u="$QUAY_USERNAME " -p="$QUAY_PASSWORD"
+
+env: 
+  global:
+  - TAG=next
+  - TRAVIS_TAG=travis
+  - PR_NUMBER=
+
+before_script:
+  - |
+    if [[ "${TRAVIS_CPU_ARCH}" == "ppc64le" || "${TRAVIS_CPU_ARCH}" == "arm64" ]]
+    then
+      # fix cpu count to avoid OOM failure
+      cat /proc/stat > /tmp/stat
+      sed -i '/^cpu[4-9]/d' /tmp/stat
+      sed -i '/^cpu[0-9][0-9]/d' /tmp/stat
+      sudo mount --bind /tmp/stat /proc/stat
+    fi
+
+jobs:
+  fast_finish: true
+  allow_failures:
+   - if: env(PR_NUMBER) IS present
+     arch: arm64
+   - if: env(PR_NUMBER) IS present
+     arch: ppc64le
+   - if: env(PR_NUMBER) IS present
+     arch: s390x
+  include: 
+    - &node-build
+      stage: PR Check
+      name: Node Build on amd64
+      if: env(PR_NUMBER) IS present
+      arch: amd64
+      install:
+        - git fetch origin +refs/pull/${PR_NUMBER}/merge
+        - git checkout -qf FETCH_HEAD
+      script: yarn
+    - <<: *node-build
+      name: Node Build on arm64
+      arch: arm64
+    - <<: *node-build
+      name: Node Build on ppc64le
+      arch: ppc64le
+    - <<: *node-build
+      name: Node Build on s390x
+      arch: s390x
+    - &docker-build
+      if: env(PR_NUMBER) IS present
+      name: Docker build (Alpine) on amd64
+      arch: amd64
+      env: DIST=alpine
+      install:
+        - git fetch origin +refs/pull/${PR_NUMBER}/merge
+        - git checkout -qf FETCH_HEAD
+      script:
+      - |
+        set -e
+        docker image prune -a -f
+        docker pull quay.io/eclipse/che-theia-dev:next
+        docker tag quay.io/eclipse/che-theia-dev:next eclipse/che-theia-dev:next
+        ./build.sh --arch:${TRAVIS_CPU_ARCH} --root-yarn-opts:--ignore-scripts --dockerfile:Dockerfile.$DIST
+    - <<: *docker-build
+      name: Docker build (Alpine) on arm64
+      arch: arm64
+    - <<: *docker-build
+      name: Docker build (Alpine) on ppc64le
+      arch: ppc64le
+    - <<: *docker-build
+      name: Docker build (Alpine) on s390x
+      arch: s390x
+    - <<: *docker-build
+      name: Docker build (ubi8) on amd64
+      arch: amd64
+      env: DIST=ubi8
+    - <<: *docker-build
+      name: Docker build (ubi8) on arm64
+      arch: arm64
+      env: DIST=ubi8
+    - <<: *docker-build
+      name: Docker build (ubi8) on ppc64le
+      arch: ppc64le
+      env: DIST=ubi8
+    - <<: *docker-build
+      name: Docker build (ubi8) on s390x
+      arch: s390x
+      env: DIST=ubi8
+
+    - &build-and-push-next
+      stage: Build & Publish 'next'
+      name: Build & Publish image on amd64 
+      if: type = api AND branch = main AND env(TAG) = "next"
+      arch: amd64
+      script: 
+      - |
+        set -e
+        docker image prune -a -f
+        ./build.sh --arch:${TRAVIS_CPU_ARCH} --root-yarn-opts:--ignore-scripts --dockerfile:Dockerfile.alpine --push
+    - <<: *build-and-push-next
+      name: Build & Publish image on arm64
+      arch: arm64
+    - <<: *build-and-push-next
+      arch: ppc64le
+      name: Build & Publish image on ppc64le
+    - <<: *build-and-push-next
+      arch: s390x
+      name: Build & Publish image on s390x
+
+    - stage: Publish multiarch image with 'next' tag
+      if: type = api AND branch = main AND env(TAG) = "next"
+      name: Publish multiarch image with next tag
+      script: .travis/publish_multiarch.sh
+
+    - &check-a-theia-branch
+      stage: Check a Theia branch
+      name: Build an image against Theia branch on amd64
+      arch: amd64
+      if: type = api AND env(THEIA_GITHUB_REPO) AND env(THEIA_BRANCH)
+      script:
+      - |
+        set -e
+        docker image prune -a -f
+        docker pull quay.io/eclipse/che-theia-dev:next
+        docker tag quay.io/eclipse/che-theia-dev:next eclipse/che-theia-dev:next
+        ./build.sh --arch:${TRAVIS_CPU_ARCH} --root-yarn-opts:--ignore-scripts --dockerfile:Dockerfile.alpine --build-args:THEIA_GITHUB_REPO=${THEIA_GITHUB_REPO} --branch:${THEIA_BRANCH}
+    - <<: *check-a-theia-branch
+      arch: arm64
+      name: Build an image against Theia branch on arm64
+    - <<: *check-a-theia-branch
+      arch: ppc64le
+      name: Build an image against Theia branch on ppc64le
+    - <<: *check-a-theia-branch
+      arch: s390x
+      name: Build an image against Theia branch on s390x
+    
+    #Release Workflow
+    - &release-che-theia
+      stage: Release che-theia
+      name: Build and publish image on amd64
+      if: type = api AND env(TAG) IS present AND env(TAG) != "next"
+      arch: amd64
+      script:
+      - |  
+        BRANCH=${TAG%.*}.x
+        git checkout "${BRANCH}"
+        docker image prune -a -f
+        ./build.sh --arch:${TRAVIS_CPU_ARCH} --root-yarn-opts:--ignore-scripts --dockerfile:Dockerfile.alpine --push
+    - <<: *release-che-theia
+      arch: arm64
+      name: Build and publish image on arm64
+    - <<: *release-che-theia
+      arch: ppc64le 
+      name: Build and publish image on ppc64le
+    - <<: *release-che-theia
+      arch: s390x
+      name: Build and publish image on s390x
+
+    - stage: Publish multiarch image 
+      if: type = api AND env(TAG) IS present AND env(TAG) != "next"
+      script: .travis/publish_multiarch.sh

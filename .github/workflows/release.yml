@@ -104,3 +104,29 @@ jobs:
         MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
         MATTERMOST_CHANNEL: eclipse-che-releases
         MATTERMOST_USERNAME: che-bot
+
+  travis-release:
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - name: Trigger build on Travis CI
+      run: |
+        body="{
+        \"request\":{
+        \"config\": {
+          \"env\": {
+            \"global\": [
+              \"TAG=${{ github.event.inputs.version }}\"
+             ]
+           }
+        }
+        }}"
+
+        curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
+        -H "Travis-API-Version: 3" \
+        -H "Authorization: token ${{ secrets.TRAVIS_TOKEN }}" \
+        -d "$body" \
+        https://api.travis-ci.com/repo/eclipse-che%2Fche-theia/requests
