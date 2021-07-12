@@ -27,8 +27,12 @@ declare module '@eclipse-che/plugin' {
         promptMessage? : string;
     }
 
+    export interface Workspace extends cheApi.workspace.Workspace {
+        name?: string;
+    }
+
     export namespace workspace {
-        export function getCurrentWorkspace(): Promise<cheApi.workspace.Workspace>;
+        export function getCurrentWorkspace(): Promise<Workspace>;
         export function getAll(): Promise<cheApi.workspace.Workspace[]>;
         export function getAllByNamespace(namespace: string): Promise<cheApi.workspace.Workspace[]>;
         export function getById(workspaceId: string): Promise<cheApi.workspace.Workspace>;

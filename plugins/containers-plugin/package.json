@@ -17,17 +17,16 @@
     "viewsContainers": {
       "right": [
         {
-          "id": "my-workspace",
-          "title": "My Workspace",
+          "id": "workspace",
+          "title": "Workspace",
           "icon": "resources/cube.svg"
         }
       ]
     },
     "views": {
-      "my-workspace": [
+      "workspace": [
         {
-          "id": "workspace",
-          "name": "Workspace"
+          "id": "workspace"
         }
       ]
     }
