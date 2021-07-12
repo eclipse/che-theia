@@ -24,14 +24,13 @@ export class CheServerRemoteApiImpl {
    * baseAPIUrl - responsible for storing base url to API service, taken from environment variable
    * machineToken - machine token taken from environment variable, always the same at workspace lifecycle
    */
-  private readonly baseAPIUrl: string;
+  private readonly baseAPIUrl: string | undefined;
   private readonly machineToken: string;
 
   constructor() {
-    if (process.env.CHE_API_INTERNAL === undefined) {
-      console.error('Unable to create Che API REST Client: "CHE_API_INTERNAL" is not set.');
-    } else {
-      this.baseAPIUrl = process.env.CHE_API_INTERNAL;
+    this.baseAPIUrl = process.env.CHE_API_INTERNAL || process.env.CHE_API_EXTERNAL;
+    if (this.baseAPIUrl === undefined || this.baseAPIUrl === '') {
+      console.error('Unable to create Che API REST client: "CHE_API" is not set');
     }
 
     if (process.env.CHE_MACHINE_TOKEN === undefined) {
@@ -52,6 +51,6 @@ export class CheServerRemoteApiImpl {
   }
 
   getCheApiURI(): string {
-    return this.baseAPIUrl;
+    return this.baseAPIUrl!;
   }
 }

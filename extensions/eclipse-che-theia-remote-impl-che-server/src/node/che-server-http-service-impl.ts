@@ -47,7 +47,7 @@ export class CheServerHttpServiceImpl implements HttpService {
     const certificateAuthority = await this.certificateService.getCertificateAuthority();
 
     const proxyUrl = process.env.http_proxy;
-    const baseUrl = process.env.CHE_API;
+    const baseUrl = process.env.CHE_API_EXTERNAL;
     console.log('proxyUrl && proxyUrl !== && baseUrl', proxyUrl && proxyUrl !== '' && baseUrl);
     if (proxyUrl && proxyUrl !== '' && baseUrl) {
       const parsedBaseUrl = url.parse(baseUrl);

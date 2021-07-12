@@ -98,9 +98,9 @@ export class ChePluginServiceImpl implements ChePluginService {
 
     try {
       const workspaceSettings: WorkspaceSettings = await this.workspaceService.getWorkspaceSettings();
-      if (workspaceSettings && workspaceSettings[PLUGIN_REGISTRY_INTERNAL_URL]) {
-        const uri = workspaceSettings[PLUGIN_REGISTRY_INTERNAL_URL];
-        const publicUri = workspaceSettings[PLUGIN_REGISTRY_URL] || uri;
+      if (workspaceSettings) {
+        const uri = workspaceSettings[PLUGIN_REGISTRY_INTERNAL_URL] || workspaceSettings[PLUGIN_REGISTRY_URL];
+        const publicUri = workspaceSettings[PLUGIN_REGISTRY_URL];
 
         this.defaultRegistry = {
           name: 'Eclipse Che plugins',
