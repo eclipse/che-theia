@@ -1,6 +1,6 @@
 {
-  "name": "@eclipse-che/recommendations-plugin",
-  "publisher": "Eclipse-Che",
+  "name": "recommendations-plugin",
+  "publisher": "@eclipse-che",
   "keywords": [
     "theia-plugin"
   ],
@@ -10,7 +10,7 @@
     "src"
   ],
   "extensionDependencies": [
-    "Eclipse Che.@eclipse-che/workspace-plugin"
+    "@eclipse-che.workspace-plugin"
   ],
   "dependencies": {
     "@eclipse-che/plugin": "0.0.1",

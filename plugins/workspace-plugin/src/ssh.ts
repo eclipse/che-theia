@@ -10,7 +10,7 @@
 
 import * as theia from '@theia/plugin';
 
-const SSH_PLUGIN_ID = 'Eclipse Che.@eclipse-che/theia-ssh-plugin';
+const SSH_PLUGIN_ID = '@eclipse-che.ssh-plugin';
 
 export interface SSHAgentConfig {
   sshAgentPid?: string;

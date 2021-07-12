@@ -1,6 +1,6 @@
 {
-  "name": "@eclipse-che/workspace-plugin",
-  "publisher": "Eclipse Che",
+  "name": "workspace-plugin",
+  "publisher": "@eclipse-che",
   "version": "0.0.1",
   "keywords": [
     "theia-plugin"
@@ -19,7 +19,7 @@
     "@theia/plugin-packager": "latest"
   },
   "extensionDependencies": [
-    "Eclipse Che.@eclipse-che/theia-ssh-plugin",
+    "@eclipse-che.ssh-plugin",
     "@eclipse-che.ext-plugin"
   ],
   "scripts": {

@@ -1,7 +1,7 @@
 {
-  "name": "@eclipse-che/github-auth-plugin",
+  "name": "github-auth-plugin",
   "version": "0.0.1",
-  "publisher": "Eclipse Che",
+  "publisher": "@eclipse-che",
   "keywords": [
     "theia-plugin"
   ],

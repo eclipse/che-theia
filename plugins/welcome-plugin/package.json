@@ -1,7 +1,7 @@
 {
-  "name": "@eclipse-che/welcome-plugin",
+  "name": "welcome-plugin",
   "version": "0.0.1",
-  "publisher": "Eclipse Che",
+  "publisher": "@eclipse-che",
   "keywords": [
     "theia-plugin"
   ],
@@ -28,13 +28,17 @@
     }
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "5.6.3"
+    "@fortawesome/fontawesome-free": "5.6.3",
+    "fs-extra": "7.0.1"
   },
   "devDependencies": {
     "@theia/plugin": "next",
     "@theia/plugin-packager": "latest",
     "@eclipse-che/plugin": "0.0.1"
   },
+  "extensionDependencies": [
+    "@eclipse-che.workspace-plugin"
+  ],
   "scripts": {
     "prepare": "yarn clean && yarn build && yarn test",
     "clean": "rimraf lib",

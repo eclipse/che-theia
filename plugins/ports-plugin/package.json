@@ -1,6 +1,6 @@
 {
-  "name": "@eclipse-che/ports-plugin",
-  "publisher": "Eclipse Che",
+  "name": "ports-plugin",
+  "publisher": "@eclipse-che",
   "version": "0.0.1",
   "keywords": [
     "theia-plugin"

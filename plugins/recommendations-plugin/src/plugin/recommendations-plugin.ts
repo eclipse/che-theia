@@ -75,7 +75,7 @@ export class RecommendationsPlugin {
 
   async enableRecommendationsPlugin(): Promise<void> {
     // Bring featured recommendations after projects are cloned
-    const workspacePlugin = theia.plugins.getPlugin('Eclipse Che.@eclipse-che/workspace-plugin');
+    const workspacePlugin = theia.plugins.getPlugin('@eclipse-che.workspace-plugin');
     if (workspacePlugin && workspacePlugin.exports && workspacePlugin.exports.onDidCloneSources) {
       workspacePlugin.exports.onDidCloneSources(() => this.afterClone());
     }

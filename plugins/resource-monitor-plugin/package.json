@@ -1,6 +1,6 @@
 {
-  "name": "@eclipse-che/resource-monitor-plugin",
-  "publisher": "Eclipse Che",
+  "name": "resource-monitor-plugin",
+  "publisher": "@eclipse-che",
   "keywords": [
     "theia-plugin"
   ],

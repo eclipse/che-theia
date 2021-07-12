@@ -1,6 +1,6 @@
 {
-  "name": "@eclipse-che/theia-ssh-plugin",
-  "publisher": "Eclipse Che",
+  "name": "ssh-plugin",
+  "publisher": "@eclipse-che",
   "keywords": [
     "theia-plugin"
   ],
