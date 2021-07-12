@@ -13,6 +13,7 @@
     "@eclipse-che/api": "latest",
     "@theia/workspace": "next",
     "@eclipse-che/theia-remote-api": "^0.0.1",
+    "@eclipse-che/theia-plugin-ext": "^0.0.1",
     "js-yaml": "3.13.1"
   },
   "devDependencies": {
@@ -47,6 +48,12 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/lib"
     ],
-    "preset": "ts-jest"
+    "preset": "ts-jest",
+    "moduleNameMapper": {
+      "\\.(css|less)$": "<rootDir>/tests/mock.js"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/browser/frontend-application-config-provider.ts"
+    ]
   }
 }

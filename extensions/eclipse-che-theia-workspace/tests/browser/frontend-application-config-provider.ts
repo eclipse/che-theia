@@ -8,6 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  ***********************************************************************/
 
-describe('no-op', function () {
-  it('no-op', function () {});
+import 'reflect-metadata';
+
+import { ApplicationProps } from '@theia/application-package/lib/application-props';
+import { FrontendApplicationConfigProvider } from '@theia/core/lib/browser/frontend-application-config-provider';
+
+FrontendApplicationConfigProvider.set({
+  ...ApplicationProps.DEFAULT.frontend.config,
+  applicationName: 'test',
 });

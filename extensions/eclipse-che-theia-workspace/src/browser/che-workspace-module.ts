@@ -12,6 +12,12 @@ import '../../src/browser/style/index.css';
 
 import { CommandContribution, MenuContribution } from '@theia/core/lib/common';
 import { Container, ContainerModule, interfaces } from 'inversify';
+import {
+  DevfileWatcher,
+  ExtensionsJsonWatcher,
+  PluginsYamlWatcher,
+  TasksJsonWatcher,
+} from './workspace-config-files-watcher';
 import { FileTree, FileTreeModel, FileTreeWidget, createFileTreeContainer } from '@theia/filesystem/lib/browser';
 import {
   FrontendApplicationContribution,
@@ -48,6 +54,17 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
   bind(FrontendApplicationContribution).to(ExplorerContribution);
 
   rebind(FileNavigatorWidget).toDynamicValue(ctx => createFileNavigatorWidget(ctx.container));
+
+  const devWorkspaceName = process.env['DEVWORKSPACE_NAME'];
+  if (devWorkspaceName) {
+    bind(DevfileWatcher).toSelf().inSingletonScope();
+    bind(ExtensionsJsonWatcher).toSelf().inSingletonScope();
+    bind(PluginsYamlWatcher).toSelf().inSingletonScope();
+    bind(TasksJsonWatcher).toSelf().inSingletonScope();
+    [DevfileWatcher, ExtensionsJsonWatcher, PluginsYamlWatcher, TasksJsonWatcher].forEach(component => {
+      bind(FrontendApplicationContribution).to(component);
+    });
+  }
 });
 
 export function createFileNavigatorContainer(parent: interfaces.Container): Container {
