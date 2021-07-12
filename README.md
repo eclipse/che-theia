@@ -101,5 +101,5 @@ The Eclipse Che community is globally reachable through public chat rooms, maili
 See https://www.eclipse.org/che/docs/che-7/overview/introduction-to-eclipse-che/#_joining_the_community
 
 ## Report issues
-
+    
 Issues are tracked on the main Eclipse Che Repository: https://github.com/eclipse/che/issues
