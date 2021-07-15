@@ -21,6 +21,7 @@ sources:
     - extensions/eclipse-che-theia-remote-api
     - extensions/eclipse-che-theia-remote-impl-che-server
     - extensions/eclipse-che-theia-remote-impl-k8s
+    - extensions/eclipse-che-theia-credentials
   plugins:
     - plugins/containers-plugin
     - plugins/ext-plugin

@@ -1,0 +1,55 @@
+{
+  "name": "@eclipse-che/theia-credentials",
+  "keywords": [
+    "theia-extension"
+  ],
+  "version": "0.0.1",
+  "description": "Eclipse Che - Theia credentials",
+  "dependencies": {
+    "@theia/core": "next",
+    "@kubernetes/client-node": "^0.12.1",
+    "@eclipse-che/theia-remote-impl-che-server": "0.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "theiaExtensions": [
+    {
+      "frontend": "lib/browser/credentials-frontend-module"
+    },
+    {
+      "backend": "lib/node/che-theia-credentials-backend-module"
+    }
+  ],
+  "license": "EPL-2.0",
+  "files": [
+    "lib",
+    "src",
+    "scripts",
+    "conf"
+  ],
+  "scripts": {
+    "prepare": "yarn clean && yarn build && yarn test",
+    "clean": "rimraf lib",
+    "format": "if-env SKIP_FORMAT=true && echo 'skip format check' || prettier --check '{src,tests}/**/*.ts' package.json",
+    "format:fix": "prettier --write '{src,tests}/**/*.ts' package.json",
+    "lint": "if-env SKIP_LINT=true && echo 'skip lint check' || eslint --cache=true --no-error-on-unmatched-pattern=true '{src,tests}/**/*.ts'",
+    "lint:fix": "eslint --fix --cache=true --no-error-on-unmatched-pattern=true \"{src,tests}/**/*.{ts,tsx}\"",
+    "compile": "tsc",
+    "build": "concurrently -n \"format,lint,compile\" -c \"red,green,blue\" \"yarn format\" \"yarn lint\" \"yarn compile\"",
+    "watch": "tsc -w",
+    "test": "if-env SKIP_TEST=true && echo 'skip test' || jest --forceExit"
+  },
+  "jest": {
+    "clearMocks": true,
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}"
+    ],
+    "coverageDirectory": "coverage",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/lib"
+    ],
+    "preset": "ts-jest"
+  }
+}

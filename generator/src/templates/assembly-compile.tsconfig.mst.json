@@ -50,6 +50,9 @@
       },
       {
          "path": "{{ packageRefPrefix}}eclipse-che-theia-mini-browser/tsconfig.json"
+      },
+      {
+         "path": "{{ packageRefPrefix}}eclipse-che-theia-credentials/tsconfig.json"
       }
    ]
 }

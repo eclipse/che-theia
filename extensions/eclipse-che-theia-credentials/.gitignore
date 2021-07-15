@@ -1,0 +1,10 @@
+conf
+node_modules
+dist
+coverage
+yarn-error.log
+.vscode
+lib
+*.tgz
+*.log
+.eslintcache
